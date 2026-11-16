@@ -49,8 +49,9 @@ Use `--mods-dir` if your server is not at `/home/arkserver/ARK/ShooterGame/Conte
 
 ## Colours
 Event/mutation colours are not visible on many of these kaiju because their materials have no
-colourisation shader permutation. That fix requires editing and redistributing the mods' assets,
-so it is not included here.
+colourisation shader permutation. That is a client-side, hand-edit-the-assets job and is **not**
+done by the script. If you are adventurous, see [COLOUR-HOWTO.md](COLOUR-HOWTO.md) for what is
+wrong and how it was fixed on one setup. It is experimental and ships no assets.
 
 ## Licence
 MIT (see LICENSE).
