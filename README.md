@@ -45,6 +45,10 @@ and network traffic, and long-range sounds. Large spawn counts multiply this. If
 range (`--netcull-m 3000 --exact`) or reduce spawn rates. Dropping the range is safe at any time,
 since the script is idempotent and `--restore` puts the originals back.
 
+The upside is the whole point: you see giant kaiju as they should be seen, as looming threats from
+far away, instead of monsters that appear out of nowhere next to you. For many players that changes
+the feel of the game, and it is worth the cost.
+
 ## Caveats - read these
 - Tested on **one** server (preaquatica branch, mods frozen) with the mod versions of Nov 2026.
   Other versions may differ; the script skips files it can't validate.
@@ -59,6 +63,9 @@ Event/mutation colours are not visible on many of these kaiju because their mate
 colourisation shader permutation. That is a client-side, hand-edit-the-assets job and is **not**
 done by the script. If you are adventurous, see [COLOUR-HOWTO.md](COLOUR-HOWTO.md) for what is
 wrong and how it was fixed on one setup. It is experimental and ships no assets.
+
+This is purely for fun, especially during events like Easter, when every spawn gets crazy colours.
+Turquoise and sky-blue Evolved Godzilla? Pink Ghidorah? Silly, but fun.
 
 ## Licence
 MIT (see LICENSE).
