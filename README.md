@@ -37,6 +37,14 @@ python3 ark_kaiju_patch.py --netcull-m 3000 --exact   # lower range if performan
 Use `--mods-dir` if your server is not at `/home/arkserver/ARK/ShooterGame/Content/Mods`
 (see `--help`). Start the server again afterwards.
 
+## Performance
+Raising the relevance range means the server replicates every kaiju within 5 km to every client in
+range, and clients keep those creatures loaded, animated and drawn at distances where vanilla ARK
+would have culled them. With several kaiju active, expect lower client frame rates, more server CPU
+and network traffic, and long-range sounds. Large spawn counts multiply this. If it hurts, lower the
+range (`--netcull-m 3000 --exact`) or reduce spawn rates. Dropping the range is safe at any time,
+since the script is idempotent and `--restore` puts the originals back.
+
 ## Caveats - read these
 - Tested on **one** server (preaquatica branch, mods frozen) with the mod versions of Nov 2026.
   Other versions may differ; the script skips files it can't validate.
@@ -44,7 +52,6 @@ Use `--mods-dir` if your server is not at `/home/arkserver/ARK/ShooterGame/Conte
 - A Workshop update or `validate` on the server overwrites the patch; just re-run the script.
 - Server-side only. Draw distance is client-side, so use `--export-dir` if you want to copy
   patched files to clients (clients' Steam verify will undo that).
-- Expect more render and network load when many kaiju are in range, and distant sounds.
 - Not affiliated with the mod authors or Wildcard. Mods belong to their authors.
 
 ## Colours
