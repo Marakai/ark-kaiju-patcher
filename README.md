@@ -1,7 +1,33 @@
 # ark-kaiju-patcher
 
-Fixes the "kaiju pop in right next to me" problem in ARK: Survival Evolved for a set of
-Steam Workshop kaiju mods, on a **dedicated server you control**.
+Server-side fixes for a set of Steam Workshop kaiju mods in ARK: Survival Evolved, on a
+**dedicated server you control**:
+
+| Script | What it does |
+|---|---|
+| `ark_kaiju_patch.py` | Kaiju visible from far away instead of popping in next to you |
+| `ark_kaiju_teams.py` | Kaiju fight each other (three hostile sides) instead of a near-total truce |
+| `ark_marnii_cats.py` | Bonus, unrelated mod: makes MarniiMods Wildlife cats spawn on maps other than Lost Island |
+
+All three edit files **already on your server's disk**, ship no mod assets, are idempotent, validate
+every file after patching, write atomically, back up the first original, offer `--dry-run` and
+`--restore`, and refuse to run while the server is running. Python 3, standard library only. Keep the
+scripts in one folder (the other two import `ark_kaiju_patch.py`).
+
+## Quick start
+```
+# stop the ARK server first
+python3 ark_kaiju_patch.py --dry-run && python3 ark_kaiju_patch.py
+python3 ark_kaiju_teams.py --dry-run && python3 ark_kaiju_teams.py
+python3 ark_marnii_cats.py --dry-run && python3 ark_marnii_cats.py     # only if you run MarniiMods Wildlife
+# start the server, then (as admin, optional) respawn wild creatures so they pick up the changes:
+#   admincheat destroywilddinos
+```
+`--dry-run` exits 2 if something would change. Use `--mods-dir` if your server is not at
+`/home/arkserver/ARK/ShooterGame/Content/Mods`, and `--backup-dir` to choose where originals go
+(defaults are under `~/ARKModtests/`). See each script's `--help`.
+
+# 1. Visibility: `ark_kaiju_patch.py`
 
 ## The problem
 Several kaiju mods ship creature blueprints with missing or small network relevance settings.
@@ -10,7 +36,7 @@ appears from nowhere a few hundred metres away. The key missing flag is
 `bUseNetworkSpatialization=False`; the script also raises `NetCullDistanceSquared` (default 5 km).
 
 ## What the script does
-`ark_kaiju_patch.py` edits the `*_Character_BP.uasset` files of these mods **already on your server's disk**:
+`ark_kaiju_patch.py` edits the `*_Character_BP.uasset` files of these mods:
 
 | Mod ID | Mod |
 |---|---|
@@ -23,9 +49,6 @@ appears from nowhere a few hundred metres away. The key missing flag is
 | 2917197925 | Gigan |
 | 2921712374 | Hedorah |
 | 2923407686 | Kiryu |
-
-It ships no mod assets. It is idempotent, validates every file after patching, writes atomically,
-backs up the first original, and refuses to run while the server is running.
 
 ## Usage
 ```
@@ -66,6 +89,62 @@ wrong and how it was fixed on one setup. It is experimental and ships no assets.
 
 This is purely for fun, especially during events like Easter, when every spawn gets crazy colours.
 Turquoise and sky-blue Evolved Godzilla? Pink Ghidorah? Silly, but fun.
+
+# 2. Who fights whom: `ark_kaiju_teams.py`
+
+## The problem
+Out of the box most of these kaiju share one team, so they leave each other alone (a near-total
+truce), while Evolved Godzilla attacks everybody. That is no fun if you want Godzilla to fight
+Ghidorah.
+
+## How ARK decides
+Each wild creature has a `TargetingTeamNameOverride`. That name must be one of the teams defined in
+the base game's `NamedTeamDefinitions` (in `COREMEDIA_PrimalGameData_BP`); each definition says which
+other teams it attacks. **A made-up name does not create a new team**: a creature with an undefined
+team name never *starts* a fight with other wild creatures, it only fights back. Only three
+definitions attack every team except their own:
+
+| Team | Attacks everyone except | Used by (vanilla) |
+|---|---|---|
+| `Carnivores_High` | own team, water carnivores | Allosaurus and hundreds of other creature blueprints |
+| `Robot_Aggressive` | own team, `Robot_Neutral` | Defender (Extinction) |
+| `Corrupt` | own team | corrupted creatures (Extinction) |
+
+So without editing the base game you get at most three mutually hostile sides.
+
+## What the script sets
+| Kaiju | Team | Result |
+|---|---|---|
+| Super Godzilla | `Corrupt` | the lone end boss, attacks every other kaiju |
+| Evolved Godzilla, Shin Godzilla | `Robot_Aggressive` | allies, attack everyone else |
+| Ghidorah, Kiryu, Gigan, Muto | `Carnivores_High` (unchanged) | allies, attack everyone else |
+| Rodan | `Carnivores_Medium_TargetPlayerOrTamed` | goes for players and tames only, but other kaiju hunt it |
+
+Rodan's two "ignore wild dinos" flags are set to False. With them True, nothing ever fought Rodan and
+it overspawned. Players and tames stay targets for every kaiju. Want a different line-up? Edit the
+`RULES` table at the top of the script, but only use team names that exist in the base game.
+
+## Notes
+- Expect a lot of fighting and destruction: kaiju AOE hits bases near a fight. Back up your world.
+- Changes apply to newly spawned creatures; `admincheat destroywilddinos` respawns everything.
+- On Extinction, `Corrupt` Super Godzilla would side with the corrupted creatures there.
+- `--restore` puts back the original mod files (the mods' original teams).
+
+# 3. Bonus: MarniiMods Wildlife cats, `ark_marnii_cats.py`
+
+The no-longer-maintained ASE mod **MarniiMods Wildlife** (1984936918) gives its domestic cat exactly
+one spawn entry, in Lost Island's own spawn container. Cats are plentiful there and (nearly) absent
+on The Island, Ragnarok, Fjordur and others, while the mod's other animals spawn fine.
+
+The script clones the cat's entry into more of the shared vanilla containers in
+`PrimalGameData_BP_MarniiModsWildlife.uasset`. Default: `Grassland,Jungle`. `Mountain` also works but
+puts cats on cliff faces; `Beach`, `Snow`, `Swamp` exist too. Existing entries are never modified.
+```
+python3 ark_marnii_cats.py --containers Grassland,Jungle   # default
+python3 ark_marnii_cats.py --weight 0.3                     # more cats (original weight 0.1)
+python3 ark_marnii_cats.py --restore                        # original file back
+```
+To remove a container again: `--restore`, then run with the list you want.
 
 ## Licence
 MIT (see LICENSE).
